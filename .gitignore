@@ -1,0 +1,38 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+
+# Virtual environment
+venv/
+ENV/
+.env/
+.venv/
+
+# VSCode
+.vscode/
+
+# PyCharm
+.idea/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Local config
+config.yaml
+
+# Log files
+*.log
+
+# Others
+*.swp
+*.bak
+
+# PyInstaller
+build/
+dist/
+TakeCareYourAss.exe
+TakeCareYourAss
+*.spec 
