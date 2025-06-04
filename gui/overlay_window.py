@@ -1,6 +1,6 @@
-from PySide6.QtWidgets import QWidget, QLabel, QVBoxLayout
+from PySide6.QtWidgets import QWidget, QApplication
 from PySide6.QtCore import Qt, QTimer, Signal
-from PySide6.QtGui import QColor, QPainter, QKeyEvent
+from PySide6.QtGui import QColor, QPainter, QKeyEvent, QFont
 
 class OverlayWindow(QWidget):
     # 添加信号
@@ -26,33 +26,50 @@ class OverlayWindow(QWidget):
         self.setAttribute(Qt.WA_TranslucentBackground)  # 透明背景
         self.setAttribute(Qt.WA_ShowWithoutActivating)  # 显示时不激活
         
-        # 设置窗口全屏
-        screen = self.screen()
-        if screen:
-            self.setGeometry(screen.geometry())
-
-        # 创建布局和标签，居中
-        layout = QVBoxLayout()
-        layout.setAlignment(Qt.AlignCenter)  # 设置布局居中对齐
-        
-        self.time_label = QLabel("休息时间")
-        self.time_label.setStyleSheet("""
-            QLabel {
-                color: white;
-                background-color: rgba(0, 0, 0, 0.7);
-                border-radius: 10px;
-                padding: 20px;
-                font-size: 36px;
-            }
-        """)
-        self.time_label.setAlignment(Qt.AlignCenter)  # 设置标签文字居中对齐
-        layout.addWidget(self.time_label)
-        self.setLayout(layout)
+        # 获取所有屏幕
+        screens = QApplication.screens()
+        if screens:
+            # 计算所有屏幕的总区域
+            total_geometry = screens[0].geometry()
+            for screen in screens[1:]:
+                total_geometry = total_geometry.united(screen.geometry())
+            # 设置窗口大小为所有屏幕的总区域
+            self.setGeometry(total_geometry)
+        # 记录1号屏幕的geometry
+        self.first_screen_geometry = screens[0].geometry() if screens else None
+        self.display_text = "休息时间"
+        self.remaining_time = self.duration * 60
 
     def paintEvent(self, event):
         painter = QPainter(self)
         painter.setRenderHint(QPainter.Antialiasing)
         painter.fillRect(self.rect(), self.overlay_color)
+        if self.first_screen_geometry:
+            # 在1号屏幕中央绘制文字
+            font = QFont()
+            font.setPointSize(36)
+            painter.setFont(font)
+            painter.setPen(Qt.white)
+            # 文字内容
+            text = self.display_text
+            # 计算文字大小
+            metrics = painter.fontMetrics()
+            text_width = metrics.horizontalAdvance(text)
+            text_height = metrics.height()
+            # 计算1号屏幕中心
+            center_x = self.first_screen_geometry.x() + self.first_screen_geometry.width() // 2
+            center_y = self.first_screen_geometry.y() + self.first_screen_geometry.height() // 2
+            # 让文字居中
+            painter.setBrush(QColor(0,0,0,180))
+            rect_x = center_x - text_width // 2 - 30
+            rect_y = center_y - text_height // 2 - 20
+            rect_w = text_width + 60
+            rect_h = text_height + 40
+            painter.setRenderHint(QPainter.Antialiasing)
+            painter.setPen(Qt.NoPen)
+            painter.drawRoundedRect(rect_x, rect_y, rect_w, rect_h, 16, 16)
+            painter.setPen(Qt.white)
+            painter.drawText(center_x - text_width // 2, center_y + text_height // 4, text)
 
     def start_countdown(self):
         """开始倒计时"""
@@ -75,7 +92,8 @@ class OverlayWindow(QWidget):
         """更新显示的时间"""
         minutes = self.remaining_time // 60
         seconds = self.remaining_time % 60
-        self.time_label.setText(f"休息时间: {minutes:02d}:{seconds:02d}\n按 ESC 键结束休息")
+        self.display_text = f"休息时间: {minutes:02d}:{seconds:02d},按 ESC 键结束休息"
+        self.update()
 
     def mousePressEvent(self, event):
         """鼠标按下事件，点击不关闭遮罩层"""

@@ -1,11 +1,31 @@
 from PySide6.QtWidgets import (
     QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
     QLabel, QLineEdit, QPushButton, QColorDialog,
-    QMessageBox, QFrame
+    QMessageBox, QFrame, QCheckBox, QApplication, QToolTip
 )
 from PySide6.QtCore import Qt, Signal
-from PySide6.QtGui import QColor, QPalette, QIntValidator, QIcon
+from PySide6.QtGui import QColor, QPalette, QIntValidator, QIcon, QFont
 import os
+
+class HelpLabel(QLabel):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.tooltip_text = ""
+        self.tooltip_shown = False
+
+    def setToolTipText(self, text):
+        self.tooltip_text = text
+
+    def mouseReleaseEvent(self, event):
+        if event.button() == Qt.LeftButton:
+            QToolTip.showText(self.mapToGlobal(self.rect().bottomRight()), self.tooltip_text)
+            self.tooltip_shown = True
+
+    def leaveEvent(self, event):
+        if self.tooltip_shown:
+            QToolTip.hideText()
+            self.tooltip_shown = False
+        super().leaveEvent(event)
 
 class SettingsWindow(QWidget):
     settings_saved = Signal(dict)
@@ -117,6 +137,27 @@ class SettingsWindow(QWidget):
                 background-color: #c0c0c0;
             }
         """
+        checkbox_style = """
+            QCheckBox {
+                color: #222;
+                font-size: 15px;
+                font-weight: 500;
+            }
+            QCheckBox::indicator {
+                width: 18px;
+                height: 18px;
+                border: 1.5px solid #d0d0d0;
+                border-radius: 4px;
+                background: #fafbfc;
+            }
+            QCheckBox::indicator:checked {
+                background: #4a90e2;
+                border: 1.5px solid #4a90e2;
+            }
+            QCheckBox::indicator:hover {
+                border: 1.5px solid #4a90e2;
+            }
+        """
 
         # 工作时间设置
         work_layout = QHBoxLayout()
@@ -186,6 +227,55 @@ class SettingsWindow(QWidget):
         color_layout.addWidget(self.color_button)
         frame_layout.addLayout(color_layout)
 
+        # 隐藏计时框设置
+        hide_timer_layout = QHBoxLayout()
+        hide_timer_label = QLabel("隐藏计时框（立即生效）:")
+        hide_timer_label.setStyleSheet(label_style)
+        
+        # 创建问号图标标签
+        help_label = HelpLabel("?")
+        help_label.setFixedSize(16, 16)  # 固定大小
+        help_label.setAlignment(Qt.AlignCenter)  # 文字居中
+        help_label.setStyleSheet("""
+            QLabel {
+                color: white;
+                background-color: #4a90e2;
+                border-radius: 8px;
+                font-size: 12px;
+                font-weight: bold;
+                padding: 0;
+                margin: 0 4px;
+                min-width: 16px;
+                max-width: 16px;
+                min-height: 16px;
+                max-height: 16px;
+            }
+            QLabel:hover {
+                background-color: #357abd;
+            }
+        """)
+        help_label.setToolTipText("倒计时一分钟时显示")
+        help_label.setCursor(Qt.PointingHandCursor)  # 鼠标悬停时显示手型光标
+        
+        # 设置提示文本样式
+        QApplication.instance().setStyleSheet("""
+            QToolTip {
+                color: white;
+                background-color: #333333;
+                border: none;
+                padding: 4px;
+                border-radius: 4px;
+            }
+        """)
+        
+        self.hide_timer_checkbox = QCheckBox()
+        self.hide_timer_checkbox.setStyleSheet(checkbox_style)
+        hide_timer_layout.addWidget(hide_timer_label)
+        hide_timer_layout.addWidget(help_label)
+        hide_timer_layout.addWidget(self.hide_timer_checkbox)
+        hide_timer_layout.addStretch()  # 添加弹性空间，使复选框靠左对齐
+        frame_layout.addLayout(hide_timer_layout)
+
         # 保存按钮
         save_button = QPushButton("保存")
         save_button.setStyleSheet(button_style)
@@ -206,6 +296,9 @@ class SettingsWindow(QWidget):
         info_label.setAlignment(Qt.AlignCenter)
         info_label.setStyleSheet("color: #888; font-size: 12px; margin-top: 18px;")
         main_layout.addWidget(info_label)
+
+        # 调整窗口高度以适应所有控件
+        self.setFixedSize(400, 550)  # 增加窗口高度
 
     def update_color_button(self):
         """更新颜色按钮的显示"""
@@ -241,6 +334,7 @@ class SettingsWindow(QWidget):
         self.timer_width_input.setText(str(self.config.get('timer_width', 200)))
         self.timer_height_input.setText(str(self.config.get('timer_height', 200)))
         self.font_size_input.setText(str(self.config.get('timer_font_size', 24)))
+        self.hide_timer_checkbox.setChecked(self.config.get('hide_timer', False))
         self.update_color_button()
 
     def save_settings(self):
@@ -252,6 +346,7 @@ class SettingsWindow(QWidget):
             timer_width = int(self.timer_width_input.text())
             timer_height = int(self.timer_height_input.text())
             font_size = int(self.font_size_input.text())
+            hide_timer = self.hide_timer_checkbox.isChecked()
             
             # 验证输入值
             if work_duration < 1:
@@ -278,7 +373,8 @@ class SettingsWindow(QWidget):
                 'timer_height': timer_height,
                 'timer_font_size': font_size,
                 'overlay_color': self.config['overlay_color'],  # 使用已保存的颜色值
-                'timer_position': timer_position  # 保存计时器位置
+                'timer_position': timer_position,  # 保存计时器位置
+                'hide_timer': hide_timer  # 保存隐藏计时框设置
             })
             
             # 保存配置

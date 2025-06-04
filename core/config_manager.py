@@ -24,7 +24,8 @@ class ConfigManager:
             'timer_position': {'x': right_x, 'y': right_y},  # 计时器右下角
             'timer_width': timer_width,  # 计时器宽度
             'timer_height': timer_height,  # 计时器高度
-            'timer_font_size': 25  # 计时器字体大小
+            'timer_font_size': 25,  # 计时器字体大小
+            'hide_timer': False  # 是否隐藏计时框
         }
         self.config = self.load_config()
 
