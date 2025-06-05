@@ -292,7 +292,7 @@ class SettingsWindow(QWidget):
         main_layout.addStretch(1)
 
         # 软件信息
-        info_label = QLabel("Take Care Your Ass v1.0.0  by S0cke3t")
+        info_label = QLabel("Take Care Your Ass v1.1.0  by S0cke3t")
         info_label.setAlignment(Qt.AlignCenter)
         info_label.setStyleSheet("color: #888; font-size: 12px; margin-top: 18px;")
         main_layout.addWidget(info_label)

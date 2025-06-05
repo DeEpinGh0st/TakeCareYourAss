@@ -50,26 +50,35 @@ class OverlayWindow(QWidget):
             font.setPointSize(36)
             painter.setFont(font)
             painter.setPen(Qt.white)
-            # 文字内容
-            text = self.display_text
+            
             # 计算文字大小
             metrics = painter.fontMetrics()
-            text_width = metrics.horizontalAdvance(text)
+            text_width = metrics.horizontalAdvance(self.display_text)
+            shortcut_width = metrics.horizontalAdvance(self.shortcut_text)
             text_height = metrics.height()
+            
             # 计算1号屏幕中心
             center_x = self.first_screen_geometry.x() + self.first_screen_geometry.width() // 2
             center_y = self.first_screen_geometry.y() + self.first_screen_geometry.height() // 2
-            # 让文字居中
+            
+            # 计算背景矩形的大小（包含两行文字）
+            rect_width = max(text_width, shortcut_width) + 60
+            rect_height = text_height * 2 + 60  # 两行文字的高度加上一些间距
+            
+            # 绘制背景
+            rect_x = center_x - rect_width // 2
+            rect_y = center_y - rect_height // 2
             painter.setBrush(QColor(0,0,0,180))
-            rect_x = center_x - text_width // 2 - 30
-            rect_y = center_y - text_height // 2 - 20
-            rect_w = text_width + 60
-            rect_h = text_height + 40
-            painter.setRenderHint(QPainter.Antialiasing)
             painter.setPen(Qt.NoPen)
-            painter.drawRoundedRect(rect_x, rect_y, rect_w, rect_h, 16, 16)
+            painter.drawRoundedRect(rect_x, rect_y, rect_width, rect_height, 16, 16)
+            
+            # 绘制第一行文字（倒计时）
             painter.setPen(Qt.white)
-            painter.drawText(center_x - text_width // 2, center_y + text_height // 4, text)
+            painter.drawText(center_x - text_width // 2, center_y - text_height // 2, self.display_text)
+            
+            # 绘制第二行文字（快捷键提示）
+            painter.setPen(Qt.white)
+            painter.drawText(center_x - shortcut_width // 2, center_y + text_height // 2, self.shortcut_text)
 
     def start_countdown(self):
         """开始倒计时"""
@@ -92,7 +101,8 @@ class OverlayWindow(QWidget):
         """更新显示的时间"""
         minutes = self.remaining_time // 60
         seconds = self.remaining_time % 60
-        self.display_text = f"休息时间: {minutes:02d}:{seconds:02d},按 ESC 键结束休息"
+        self.display_text = f"休息时间: {minutes:02d}:{seconds:02d}"
+        self.shortcut_text = "按 ESC 键结束休息"
         self.update()
 
     def mousePressEvent(self, event):

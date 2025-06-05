@@ -260,11 +260,14 @@ class TimerWindow(QWidget):
         if 'timer_position' in self.config:
             self.move(self.config['timer_position']['x'], self.config['timer_position']['y'])
         
-        # 如果启用了隐藏计时框功能，且剩余时间大于1分钟，则隐藏窗口
+        # 处理隐藏计时框功能
         if self.config.get('hide_timer', False):
             minutes, seconds = self.timer.get_remaining_time()
             if minutes > 0 or seconds > 60:
                 self.hide()
+        else:
+            # 如果取消隐藏计时框，则显示窗口
+            self.show()
 
     def closeEvent(self, event):
         """关闭窗口事件"""
