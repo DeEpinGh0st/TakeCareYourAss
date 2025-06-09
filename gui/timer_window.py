@@ -204,7 +204,8 @@ class TimerWindow(QWidget):
             # 显示休息提醒
             self.overlay = OverlayWindow(
                 self.config['overlay_color'],
-                self.config['break_duration']
+                self.config['break_duration'],
+                self.config.get('overlay_opacity', 50)  # 获取透明度设置，默认为50
             )
             # 连接遮罩层关闭信号
             self.overlay.overlay_closed.connect(self.start_timer)

@@ -1,4 +1,5 @@
 @echo off
+chcp 65001
 setlocal enabledelayedexpansion
 
 echo === TakeCareYourAss Windows打包脚本 ===

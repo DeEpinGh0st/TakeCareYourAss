@@ -21,6 +21,7 @@ class ConfigManager:
             'work_duration': 60,  # 工作时间（分钟）
             'break_duration': 10,  # 休息时间（分钟）
             'overlay_color': [144, 238, 144, 128],  # 淡黄绿色 [R, G, B, A]
+            'overlay_opacity': 50,  # 遮罩层透明度（0-100）
             'timer_position': {'x': right_x, 'y': right_y},  # 计时器右下角
             'timer_width': timer_width,  # 计时器宽度
             'timer_height': timer_height,  # 计时器高度
